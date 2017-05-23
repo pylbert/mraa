@@ -73,8 +73,6 @@ services:
         - BUILDSWIG=ON
         - BUILDSWIGNODE=ON
         - NODE_VERSION=v4.1.2
-        - CC=gcc-4.8
-        - CXX=g++-4.8
     command: bash -c "source /root/.nvm/nvm.sh && nvm use v4.1.2 && make npmpkg && cd .. && node-gyp configure && node-gyp build"
 
   node5:
@@ -82,6 +80,4 @@ services:
     build:
       args:
         - NODE_VERSION=v5.12.0
-        - CC=clang-3.8
-        - CXX=clang++-3.8
     command: bash -c "source /root/.nvm/nvm.sh && nvm use v5.12.0 && make npmpkg && cd .. && node-gyp configure && node-gyp build"
