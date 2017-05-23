@@ -4,6 +4,10 @@ language: cpp
 
 env:
   - TARGET=doc
+  - TARGET=python2 CC=clang-3.8 CXX=clang++-3.8
+  - TARGET=python2 CC=gcc-4.8 CXX=g++-4.8
+  - TARGET=python3 CC=clang-3.8 CXX=clang++-3.8
+  - TARGET=python3 CC=gcc-4.8 CXX=g++-4.8
 
 services:
   - docker
