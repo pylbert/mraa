@@ -13,6 +13,18 @@ env:
   - TARGET=java
   - TARGET=node4
   - TARGET=node5
+  - TARGET=python2 JSONPLAT=ON
+  - TARGET=python3 JSONPLAT=ON
+  - TARGET=java JSONPLAT=ON
+  - TARGET=node4 JSONPLAT=ON
+  - TARGET=node5 JSONPLAT=ON
+  - TARGET=python2 BUILDARCH=MOCK
+  - TARGET=python3 BUILDARCH=MOCK
+  - TARGET=java BUILDARCH=MOCK
+  - TARGET=node4 BUILDARCH=MOCK
+  - TARGET=node5 BUILDARCH=MOCK
+
+
 
 matrix:
   exclude:
