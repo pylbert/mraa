@@ -23,13 +23,14 @@ services:
         - FTDI4222=OFF
         - IPK=OFF
         - RPM=OFF
-        - ENABLEEXAMPLES=OFF
+        - ENABLEEXAMPLES=ON
         - INSTALLGPIOTOOL=OFF
         - INSTALLTOOLS=OFF
-        - BUILDTESTS=OFF
+        - BUILDTESTS=ON
         - CC=clang-3.8
         - CXX=clang++-3.8
         - NODE_VERSION=v4.1.2
+        - BUILDARCH
     environment:
       - http_proxy
       - https_proxy
@@ -50,11 +51,11 @@ services:
       args:
         - BUILDSWIG=ON
         - BUILDSWIGPYTHON=ON
-    command: make _python2-mraa
+    command: bash -c "make _python2-mraa && make test"
 
   python3:
     extends: python2
-    command: make _python3-mraa
+    command: bash -c "make _python3-mraa && make test"
 
   java:
     extends: main
@@ -64,7 +65,7 @@ services:
         - BUILDSWIGJAVA=ON
         - CC=gcc-4.8
         - CXX=g++-4.8
-    command: make mraajava
+    command: bash -c "make mraajava && make test"
 
   node4:
     extends: main
@@ -73,11 +74,10 @@ services:
         - BUILDSWIG=ON
         - BUILDSWIGNODE=ON
         - NODE_VERSION=v4.1.2
-    command: bash -c "source /root/.nvm/nvm.sh && nvm use v4.1.2 && make npmpkg && cd .. && node-gyp configure && node-gyp build"
+    command: bash -c "source /root/.nvm/nvm.sh && make npmpkg && cd .. && node-gyp configure && node-gyp build && npm test"
 
   node5:
     extends: node4
     build:
       args:
         - NODE_VERSION=v5.12.0
-    command: bash -c "source /root/.nvm/nvm.sh && nvm use v5.12.0 && make npmpkg && cd .. && node-gyp configure && node-gyp build"

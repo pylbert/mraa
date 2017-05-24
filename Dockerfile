@@ -15,7 +15,7 @@ RUN apt-get -y update && \
   # Java Build Dependencies
   default-jre default-jdk \
   # Json Platform Build Dependencies
-  libjson0 libjson0-dev
+  pkg-config libjson0 libjson0-dev
 
 # Swig Build Dependencies
 RUN wget http://iotdk.intel.com/misc/tr/swig-3.0.10.tar.gz && \
@@ -28,18 +28,8 @@ RUN wget -q -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.2/instal
 # Set Workdir
 WORKDIR /usr/src/app
 
-# Copy sources
-COPY . .
-
-# Update Submodules
-RUN git submodule update --init --recursive
-
-# Fix line ending issue in src/doxy2swig.py and do it executable
-RUN tr -d "\r" < src/doxy2swig.py > src/_doxy2swig.py && \
-    mv src/_doxy2swig.py src/doxy2swig.py && \
-    chmod u+x src/doxy2swig.py
-
 # Configure Build Arguments
+ARG BUILDARCH
 ARG BUILDDOC
 ARG BUILDSWIG
 ARG BUILDSWIGPYTHON
@@ -48,20 +38,18 @@ ARG BUILDSWIGJAVA
 ARG USBPLAT=OFF
 ARG FIRMATA=OFF
 ARG ONEWIRE=OFF
-ARG JSONPLAT=OFF
+ARG JSONPLAT
 ARG IMRAA=OFF
 ARG FTDI4222=OFF
 ARG IPK=OFF
 ARG RPM=OFF
-ARG ENABLEEXAMPLES=OFF
+ARG ENABLEEXAMPLES
 ARG INSTALLGPIOTOOL=OFF
 ARG INSTALLTOOLS=OFF
-ARG BUILDTESTS=OFF
+ARG BUILDTESTS
 ARG CC
 ARG CXX
 ARG NODE_VERSION
-
-RUN env
 
 # Configure Build Environment
 ENV NVM_DIR /root/.nvm
@@ -71,6 +59,17 @@ ENV CXX $CXX
 RUN . $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && nvm use $NODE_VERSION && \
     npm install -g node-gyp && node-gyp install
 
+# Copy sources
+COPY . .
+
+# Update Submodule
+RUN git submodule update --init --recursive
+
+# Fix line ending issue in src/doxy2swig.py and do it executable
+RUN tr -d "\r" < src/doxy2swig.py > src/_doxy2swig.py && \
+    mv src/_doxy2swig.py src/doxy2swig.py && \
+    chmod u+x src/doxy2swig.py
+
 # Change Workdir to build directory
 WORKDIR /usr/src/app/build
 
@@ -78,6 +77,7 @@ WORKDIR /usr/src/app/build
 RUN . $NVM_DIR/nvm.sh && cmake \
     -DSWIG_EXECUTABLE=/usr/bin/swig \
     -DSWIG_DIR:PATH=/usr/share/swig/3.0.10/ \
+    -DBUILDARCH=$BUILDARCH \
     -DBUILDDOC=$BUILDDOC \
     -DBUILDSWIG=$BUILDSWIG \
     -DBUILDSWIGPYTHON=$BUILDSWIGPYTHON \
