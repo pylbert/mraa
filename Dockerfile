@@ -3,34 +3,27 @@ FROM ubuntu:16.04
 ENV DEBIAN_FRONTEND noninteractive
 
 # Update apt-get
-RUN apt-get -y update
-
-# Install apt-utils
-RUN apt-get -y --no-install-recommends install apt-utils
-
-# Main Build Dependencies
-RUN apt-get -y install git build-essential cmake clang-3.8 g++-4.8
-
-# Docs Build Dependencies
-RUN apt-get -y install python-sphinx doxygen graphviz
+RUN apt-get -y update && \
+  # Install apt-utils
+  apt-get -y --no-install-recommends install apt-utils && \
+  # Main Build Dependencies
+  apt-get -y --no-install-recommends install git build-essential cmake clang-3.8 g++-4.8 wget libpcre3 libpcre3-dev \
+  # Docs Build Dependencies
+  python-sphinx doxygen graphviz \
+  # Python Build Dependencies
+  python python-dev python3 python3-dev \
+  # Java Build Dependencies
+  default-jre default-jdk \
+  # Json Platform Build Dependencies
+  libjson0 libjson0-dev
 
 # Swig Build Dependencies
-RUN apt-get -y install wget libpcre3 libpcre3-dev && \
-    wget http://iotdk.intel.com/misc/tr/swig-3.0.10.tar.gz && \
+RUN wget http://iotdk.intel.com/misc/tr/swig-3.0.10.tar.gz && \
     tar xf swig-3.0.10.tar.gz && cd swig-3.0.10 && \
     ./configure --prefix=/usr/ && make && make install && cd ..
 
-# Python Build Dependencies
-RUN apt-get -y install python python-dev python3 python3-dev
-
-# Java Build Dependencies
-RUN apt-get -y install default-jre default-jdk
-
-# Json Platform Build Dependencies
-RUN apt-get -y install libjson0 libjson0-dev
-
 # Node.js Build Dependencies
-RUN wget -q -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
+RUN wget -q -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
 
 # Set Workdir
 WORKDIR /usr/src/app
@@ -75,7 +68,8 @@ ENV NVM_DIR /root/.nvm
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 ENV CC $CC
 ENV CXX $CXX
-RUN . $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && nvm use $NODE_VERSION && npm install -g node-gyp
+RUN . $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && nvm use $NODE_VERSION && \
+    npm install -g node-gyp && node-gyp install
 
 # Change Workdir to build directory
 WORKDIR /usr/src/app/build
