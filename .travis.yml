@@ -24,12 +24,14 @@ env:
   - TARGET=node4 BUILDARCH=MOCK
   - TARGET=node5 BUILDARCH=MOCK
 
-
-
 matrix:
   exclude:
   - compiler: clang
     env: TARGET=java
+  - compiler: clang
+    env: TARGET=java JSONPLAT=ON
+  - compiler: clang
+    env: TARGET=java BUILDARCH=MOCK
 
 services:
   - docker
@@ -42,4 +44,4 @@ before_script:
   - docker-compose build ${TARGET}
 
 script:
-  - docker-compose up ${TARGET}
+  - docker-compose run ${TARGET}
