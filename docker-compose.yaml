@@ -18,7 +18,7 @@ services:
         - USBPLAT=OFF
         - FIRMATA=OFF
         - ONEWIRE=OFF
-        - JSONPLAT=OFF
+        - JSONPLAT
         - IMRAA=OFF
         - FTDI4222=OFF
         - IPK=OFF
