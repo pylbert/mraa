@@ -2,22 +2,31 @@ sudo: required
 
 language: cpp
 
+compiler:
+  - clang
+  - gcc
+
 env:
   - TARGET=doc
-  - TARGET=python2 CC=clang-3.8 CXX=clang++-3.8
-  - TARGET=python2 CC=gcc-4.8 CXX=g++-4.8
-  - TARGET=python3 CC=clang-3.8 CXX=clang++-3.8
-  - TARGET=python3 CC=gcc-4.8 CXX=g++-4.8
-  - TARGET=java CC=gcc-4.8 CXX=g++-4.8
-  - TARGET=node4 CC=gcc-4.8 CXX=g++-4.8
-  - TARGET=node4 CC=clang-3.8 CXX=clang++-3.8
-  - TARGET=node5 CC=gcc-4.8 CXX=g++-4.8
-  - TARGET=node5 CC=clang-3.8 CXX=clang++-3.8
+  - TARGET=python2
+  - TARGET=python3
+  - TARGET=java
+  - TARGET=node4
+  - TARGET=node5
+
+matrix:
+  exclude:
+  - compiler: clang
+    env: TARGET=java
 
 services:
   - docker
 
-before_install:
+before_script:
+  - if [ "$CC" == "gcc" ]; then export CC=gcc-4.8; fi
+  - if [ "$CXX" == "g++" ]; then export CXX=g++-4.8; fi
+  - if [ "$CC" == "clang" ]; then export CC=clang-3.8; fi
+  - if [ "$CXX" == "clang++" ]; then export CXX=clang++-3.8; fi
   - docker-compose build ${TARGET}
 
 script:
