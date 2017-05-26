@@ -26,12 +26,21 @@ env:
 
 matrix:
   exclude:
-  - compiler: clang
-    env: TARGET=java
-  - compiler: clang
-    env: TARGET=java JSONPLAT=ON
-  - compiler: clang
-    env: TARGET=java BUILDARCH=MOCK
+    - compiler: clang
+      env: TARGET=java
+    - compiler: clang
+      env: TARGET=java JSONPLAT=ON
+    - compiler: clang
+      env: TARGET=java BUILDARCH=MOCK
+  allow_failures:
+    - compiler: gcc
+      env: TARGET=node4 JSONPLAT=ON
+    - compiler: clang
+      env: TARGET=node4 JSONPLAT=ON
+    - compiler: gcc
+      env: TARGET=node5 JSONPLAT=ON
+    - compiler: clang
+      env: TARGET=node5 JSONPLAT=ON
 
 services:
   - docker
