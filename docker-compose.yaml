@@ -51,11 +51,11 @@ services:
       args:
         - BUILDSWIG=ON
         - BUILDSWIGPYTHON=ON
-    command: bash -c "make _python2-mraa && make test"
+    command: bash -c "make _python2-mraa && ctest --output-on-failure"
 
   python3:
     extends: python2
-    command: bash -c "make _python3-mraa && make test"
+    command: bash -c "make _python3-mraa && ctest --output-on-failure"
 
   java:
     extends: main
@@ -65,7 +65,7 @@ services:
         - BUILDSWIGJAVA=ON
         - CC=gcc-4.8
         - CXX=g++-4.8
-    command: bash -c "make mraajava && make test"
+    command: bash -c "make mraajava && ctest --output-on-failure"
 
   node4:
     extends: main
