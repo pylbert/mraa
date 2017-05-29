@@ -73,7 +73,7 @@ services:
       args:
         - BUILDSWIG=ON
         - BUILDSWIGNODE=ON
-        - NODE_VERSION=v4.1.2
+        - NODE_VERSION=v4.4.7
     command: bash -c "source /root/.nvm/nvm.sh && make npmpkg && cd .. && node-gyp configure && node-gyp build && npm test"
 
   node5:
