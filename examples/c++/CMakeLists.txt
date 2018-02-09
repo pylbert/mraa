@@ -8,6 +8,7 @@ add_executable (Spi-pot Spi-pot.cpp)
 add_executable (Uart Uart-example.cpp)
 add_executable (Isr-pin6 Isr-pin6.cpp)
 add_executable (Iio-dummy Iio-dummy.cpp)
+add_executable (Initio Initio.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/api)
 
@@ -19,6 +20,7 @@ target_link_libraries (Spi-pot mraa stdc++)
 target_link_libraries (Uart mraa stdc++)
 target_link_libraries (Isr-pin6 mraa stdc++)
 target_link_libraries (Iio-dummy mraa stdc++)
+target_link_libraries (Initio mraa stdc++)
 
 if (ONEWIRE)
   add_executable (UartOW UartOW.cpp)

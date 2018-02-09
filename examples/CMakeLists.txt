@@ -16,7 +16,7 @@ add_executable (spi_max7219 spi_max7219.c)
 if (NOT ANDROID_TOOLCHAIN)
   add_executable (iio_driver iio_driver.c)
 endif ()
-
+add_executable (initio initio.c)
 include_directories(${PROJECT_SOURCE_DIR}/api)
 # FIXME Hack to access mraa internal types used by mraa-i2c
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -44,6 +44,7 @@ if (ONEWIRE)
   add_executable (uart_ow uart_ow.c)
   target_link_libraries (uart_ow mraa)
 endif ()
+target_link_libraries (initio mraa)
 
 if (FIRMATA)
   add_executable (firmata_curie_imu firmata_curie_imu.c)

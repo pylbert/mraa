@@ -27,13 +27,14 @@
 #include <string.h>
 
 #include "mraa.hpp"
+#include <vector>
 
 int main()
 {
     // GPIO-PIN
     mraa::Gpio* gpio = mraa::initIo<mraa::Gpio>("gpio-1");
     // GPIO-RAW-RAWPIN
-    mmraa::Gpio* gpioraw = mraa::initIo<mraa::Gpio>initIo("gpio-raw-131");
+    mraa::Gpio* gpioraw = mraa::initIo<mraa::Gpio>("gpio-raw-131");
     // AIO-PIN
     mraa::Aio aio = mraa::initIo<mraa::Aio>("aio-0");
     // PWM-PIN
@@ -52,17 +53,4 @@ int main()
     mraa::I2c i2c = mraa::initIo<mraa::I2c>("i2c-0");
     // I2C-RAW-BUS
     mraa::I2c i2craw = mraa::initIo<mraa::I2c>("i2c-raw-0");
-
-    // FREE STUFF
-    delete gpio;
-    delete gpioraw;
-    delete aio;
-    delete pwm;
-    delete pwmraw;
-    delete uart;
-    delete uartraw;
-    delete spi;
-    delete spiraw;
-    delete i2c;
-    delete i2craw;
 }
