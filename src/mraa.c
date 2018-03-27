@@ -313,6 +313,8 @@ mraa_deinit()
     }
 #if !defined(PERIPHERALMAN)
     if (plat_iio != NULL) {
+        for (int i = 0; i < plat_iio->iio_device_count; i++)
+            free(&plat_iio->iio_devices[i]);
         free(plat_iio);
         plat_iio = NULL;
     }
@@ -360,6 +362,7 @@ mraa_iio_detect()
             return MRAA_ERROR_UNSPECIFIED;
         }
     }
+
     char name[64], filepath[64];
     int fd, len, i;
     plat_iio->iio_device_count = num_iio_devices;
@@ -1178,57 +1181,58 @@ mraa_count_i2c_files(const char* path, const struct stat* sb, int flag, struct F
 int
 mraa_find_i2c_bus_pci(const char* pci_device, const char *pci_id, const char* adapter_name)
 {
+    int bus_id = -1;
     /**
      * For example we'd get something like:
      * pci0000:00/0000:00:16.3/i2c_desiignware.3
      */
     char path[1024];
     snprintf(path, 1024-1, "/sys/devices/pci%s/%s/%s/", pci_device, pci_id, adapter_name);
-    if (mraa_file_exist(path)) {
-        struct dirent **namelist;
-        int n;
-        n = scandir(path, &namelist, NULL, alphasort);
-        if (n < 0) {
-            syslog(LOG_ERR, "Failed to get information on i2c");
-            return -1;
+    if (!mraa_file_exist(path)) {
+        syslog(LOG_ERR, "I2c device path '%s' not found", path);
+        return bus_id;
+    }
+
+    struct dirent **namelist;
+    int n = scandir(path, &namelist, NULL, alphasort);
+    if (n < 0) {
+        syslog(LOG_ERR, "Failed to get information on i2c");
+        return bus_id;
+    }
+
+    /* Iterate over the scandir results, fall out if a bus is found */
+    while (n-- && (bus_id == -1)) {
+        char* dup = strdup(namelist[n]->d_name);
+        char* orig_dup = dup;
+        if (dup == NULL) {
+            syslog(LOG_ERR, "Ran out of memory!");
+            break;
         }
-        else {
-            while (n--) {
-                char* dup = strdup(namelist[n]->d_name);
-                char* orig_dup = dup;
-                if (dup == NULL) {
-                    syslog(LOG_ERR, "Ran out of memory!");
-                    break;
-                }
-                const char delim = '-';
-                char* token;
-                token = strsep(&dup, &delim);
+        const char delim[] = "-";
+        char* token = strsep(&dup, delim);
+        if (token != NULL) {
+            if (strncmp("i2c", token, 3) == 0) {
+                token = strsep(&dup, delim);
                 if (token != NULL) {
-                    if (strncmp("i2c", token, 3) == 0) {
-                        token = strsep(&dup, &delim);
-                        if (token != NULL) {
-                            int ret = -1;
-                            if (mraa_atoi(token, &ret) == MRAA_SUCCESS) {
-                                free(orig_dup);
-                                free(namelist[n]);
-                                free(namelist);
-                                syslog(LOG_NOTICE, "Adding i2c bus found on i2c-%d on adapter %s", ret, adapter_name);
-                                return ret;
-                            }
-                            free(orig_dup);
-                            free(namelist[n]);
-                            free(namelist);
-                            return -1;
-                        }
+                    /* Found the bus, free remaining memory and return */
+                    if (mraa_atoi(token, &bus_id) == MRAA_SUCCESS) {
+                        syslog(LOG_NOTICE, "Adding i2c bus found on i2c-%d on adapter %s",
+                                bus_id, adapter_name);
                     }
                 }
-                free(orig_dup);
-                free(namelist[n]);
             }
-            free(namelist);
         }
+        free(orig_dup);
+        free(namelist[n]);
     }
-    return -1;
+
+    /* Free remaining scandir entries if any */
+    while (n >= 0)
+        free(namelist[n--]);
+
+    free(namelist);
+
+    return bus_id;
 }
 
 int
