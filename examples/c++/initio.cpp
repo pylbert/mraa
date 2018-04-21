@@ -6,8 +6,7 @@
 using namespace mraa;
 
 int main() {
-  MraaIo mraaIo("g:5:1-some_upm_specific_stuff");
+  MraaIo mraaIo("g:5:0,p:32-some_upm_specific_stuff");
 
-  /* For now, blend mraa C API calls with the existing C++ API. */
-  std::cout << mraa_gpio_read(mraaIo.gpios[0]) << std::endl;
+  std::cout << mraaIo.gpios.size() << " " << mraaIo.gpios[0].read() << std::endl;
 }

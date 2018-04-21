@@ -113,6 +113,19 @@ class Iio
     }
 
     /**
+     * IIO constructor, takes a pointer to a IIO context and initialises the IIO class
+     *
+     * @param iio_context void * to an IIO context
+     */
+    Iio(void* iio_context)
+    {
+      m_iio = (mraa_iio_context) iio_context;
+      if (m_iio == NULL) {
+        throw std::invalid_argument("Invalid IIO context");
+      }
+    }
+
+    /**
      * Iio destructor
      */
     ~Iio()

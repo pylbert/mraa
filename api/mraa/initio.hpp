@@ -5,6 +5,15 @@
 #include <stdexcept>
 #include <vector>
 
+#include "aio.hpp"
+#include "gpio.hpp"
+#include "i2c.hpp"
+#include "iio.hpp"
+#include "pwm.hpp"
+#include "spi.hpp"
+#include "uart.hpp"
+#include "uart_ow.hpp"
+
 namespace mraa
 {
 class MraaIo
@@ -19,14 +28,38 @@ class MraaIo
         throw std::runtime_error("mraa_io_init error");
       }
 
-      aios.insert(aios.end(), &descs->aios[0], &descs->aios[descs->n_aio]);
-      gpios.insert(gpios.end(), &descs->gpios[0], &descs->gpios[descs->n_gpio]);
-      i2cs.insert(i2cs.end(), &descs->i2cs[0], &descs->i2cs[descs->n_i2c]);
-      iios.insert(iios.end(), &descs->iios[0], &descs->iios[descs->n_iio]);
-      pwms.insert(pwms.end(), &descs->pwms[0], &descs->pwms[descs->n_pwm]);
-      spis.insert(spis.end(), &descs->spis[0], &descs->spis[descs->n_spi]);
-      uarts.insert(uarts.end(), &descs->uarts[0], &descs->uarts[descs->n_uart]);
-      uart_ows.insert(uart_ows.end(), &descs->uart_ows[0], &descs->uart_ows[descs->n_uart_ow]);
+      for (int i = 0; i < descs->n_aio; ++i) {
+        aios.emplace_back(descs->aios[i]);
+      }
+
+      for (int i = 0; i < descs->n_gpio; ++i) {
+        gpios.emplace_back(descs->gpios[i]);
+      }
+
+      for (int i = 0; i < descs->n_i2c; ++i) {
+        i2cs.emplace_back(descs->i2cs[i]);
+      }
+
+      //
+      for (int i = 0; i < descs->n_iio; ++i) {
+        iios.emplace_back(descs->iios[i]);
+      }
+
+      for (int i = 0; i < descs->n_pwm; ++i) {
+        pwms.emplace_back(descs->pwms[i]);
+      }
+
+      for (int i = 0; i < descs->n_spi; ++i) {
+        spis.emplace_back(descs->spis[i]);
+      }
+
+      for (int i = 0; i < descs->n_uart; ++i) {
+        uarts.emplace_back(descs->uarts[i]);
+      }
+
+      for (int i = 0; i < descs->n_uart_ow; ++i) {
+        uart_ows.emplace_back(descs->uart_ows[i]);
+      }
 
       if (descs->leftover_str) {
         leftoverStr = std::string(descs->leftover_str);
@@ -37,18 +70,39 @@ class MraaIo
 
     ~MraaIo()
     {
-      mraa_io_close(descs);
+      if (descs->leftover_str)
+        free(descs->leftover_str);
+
+      if (descs->n_aio)
+        free(descs->aios);
+      if (descs->n_gpio)
+        free(descs->gpios);
+      if (descs->n_i2c)
+        free(descs->i2cs);
+      if (descs->n_iio)
+        free(descs->iios);
+      if (descs->n_pwm)
+        free(descs->pwms);
+      if (descs->n_spi)
+        free(descs->spis);
+      if (descs->n_uart)
+        free(descs->uarts);
+      if (descs->n_uart_ow)
+        free(descs->uart_ows);
+
+      /* Finally free the mraa_io_descriptor structure. */
+      free(descs);
     }
 
   public:
-    std::vector<mraa_aio_context> aios;
-    std::vector<mraa_gpio_context> gpios;
-    std::vector<mraa_i2c_context> i2cs;
-    std::vector<mraa_iio_context> iios;
-    std::vector<mraa_pwm_context> pwms;
-    std::vector<mraa_spi_context> spis;
-    std::vector<mraa_uart_context> uarts;
-    std::vector<mraa_uart_ow_context> uart_ows;
+    std::vector<Aio> aios;
+    std::vector<Gpio> gpios;
+    std::vector<I2c> i2cs;
+    std::vector<Iio> iios;
+    std::vector<Pwm> pwms;
+    std::vector<Spi> spis;
+    std::vector<Uart> uarts;
+    std::vector<UartOW> uart_ows;
 
   protected:
     /* Used exclusively by the UPM library. */

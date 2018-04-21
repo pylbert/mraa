@@ -75,6 +75,21 @@ class UartOW
     }
 
     /**
+     * UartOW Constructor, takes a pointer to the UartOW context and initialises
+     * the UartOW class
+     *
+     * @param uart_ow_context void * to a UartOW context
+     */
+    UartOW(void* uart_ow_context)
+    {
+      m_uart = (mraa_uart_ow_context) uart_ow_context;
+
+      if (m_uart == NULL) {
+        throw std::invalid_argument("Invalid UART_OW context");
+      }
+    }
+
+    /**
      * Uart destructor
      */
     ~UartOW()
