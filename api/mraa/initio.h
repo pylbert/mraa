@@ -81,7 +81,7 @@ typedef struct _mraa_io_descriptor {
   *              a:13:10             # aio 13, 10 bits
   *
   *      GPIO
-  *          GPIO_KEY:gpio pin[:value:mode:dir:edge:input:driver]
+  *          GPIO_KEY:gpio pin[:dir:value:mode:edge:input:driver]
   *
   *          examples:
   *              g:13:input          # gpio 13, input

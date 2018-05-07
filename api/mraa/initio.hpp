@@ -40,7 +40,6 @@ class MraaIo
         i2cs.emplace_back(descs->i2cs[i]);
       }
 
-      //
       for (int i = 0; i < descs->n_iio; ++i) {
         iios.emplace_back(descs->iios[i]);
       }

@@ -1,33 +1,8 @@
-/*
- * Author: Noel Eck <noel.eck@intel.com>
- * Copyright (c) 2014-2016 Intel Corporation.
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
 #include <limits.h>
-
 
 #include "initio.h"
 #include "initio/initio_keys.h"
@@ -415,8 +390,38 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
   }
   if (++idx == n) return dev;
 
+  /* Check for direction. */
+  int dir = -1;
+  if (strncmp(proto[idx], G_DIR_OUT, strlen(G_DIR_OUT)) == 0) {
+      dir = MRAA_GPIO_OUT;
+  } else if (strncmp(proto[idx], G_DIR_IN, strlen(G_DIR_IN)) == 0) {
+      dir = MRAA_GPIO_IN;
+  } else if (strncmp(proto[idx], G_DIR_OUT_HIGH, strlen(G_DIR_OUT_HIGH)) == 0) {
+      dir = MRAA_GPIO_OUT_HIGH;
+  } else if (strncmp(proto[idx], G_DIR_OUT_LOW, strlen(G_DIR_OUT_LOW)) == 0) {
+      dir = MRAA_GPIO_OUT_LOW;
+  } else {}
+
+  if (dir != -1) {
+      if (mraa_gpio_dir(dev, (mraa_gpio_dir_t)dir) != MRAA_SUCCESS) {
+          syslog(LOG_ERR, "parse_gpio: error setting up gpio direction %s", proto[idx]);
+          mraa_gpio_close(dev);
+          return NULL;
+      }  else {
+          if (++idx == n) return dev;
+      }
+  } else {
+      // Set direction to default - output
+      if (mraa_gpio_dir(dev, MRAA_GPIO_OUT) != MRAA_SUCCESS) {
+          syslog(LOG_ERR, "parse_gpio: error setting up gpio direction %s", G_DIR_OUT);
+          mraa_gpio_close(dev);
+          return NULL;
+      }
+  }
+
+  // Check the value.
   int value = -1;
-  if (idx == 2 && mraa_atoi_x(proto[idx], NULL, &value, 0) == MRAA_SUCCESS) {
+  if (mraa_atoi_x(proto[idx], NULL, &value, 0) == MRAA_SUCCESS) {
     if (mraa_gpio_write(dev, value) != MRAA_SUCCESS) {
       syslog(LOG_ERR, "parse_gpio: could not init gpio number %d with value %d", gpio_num, value);
       mraa_gpio_close(dev);
@@ -425,9 +430,6 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
       /* We have a match. */
       if (++idx == n) return dev;
     }
-  } else {
-    mraa_gpio_close(dev);
-    return NULL;
   }
 
   /* Check for mode. */
@@ -454,28 +456,6 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
       mraa_gpio_close(dev);
       return NULL;
     } else {
-      if (++idx == n) return dev;
-    }
-  }
-
-  /* Check for direction. */
-  int dir = -1;
-  if (strncmp(proto[idx], G_DIR_OUT, strlen(G_DIR_OUT)) == 0) {
-    dir = MRAA_GPIO_OUT;
-  } else if (strncmp(proto[idx], G_DIR_IN, strlen(G_DIR_IN)) == 0) {
-    dir = MRAA_GPIO_IN;
-  } else if (strncmp(proto[idx], G_DIR_OUT_HIGH, strlen(G_DIR_OUT_HIGH)) == 0) {
-    dir = MRAA_GPIO_OUT_HIGH;
-  } else if (strncmp(proto[idx], G_DIR_OUT_LOW, strlen(G_DIR_OUT_LOW)) == 0) {
-    dir = MRAA_GPIO_OUT_LOW;
-  } else {}
-
-  if (dir != -1) {
-    if (mraa_gpio_dir(dev, (mraa_gpio_dir_t)dir) != MRAA_SUCCESS) {
-      syslog(LOG_ERR, "parse_gpio: error setting up gpio direction %s", proto[idx]);
-      mraa_gpio_close(dev);
-      return NULL;
-    }  else {
       if (++idx == n) return dev;
     }
   }
@@ -542,7 +522,7 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
 mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
 {
   mraa_result_t status = MRAA_SUCCESS;
-  char *p_str = NULL;
+  size_t leftover_str_len = 0;
   /* Allocate space for the descriptor */
   mraa_io_descriptor *new_desc = calloc(1, sizeof(mraa_io_descriptor));
   if (new_desc == NULL) {
@@ -551,31 +531,14 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
     return MRAA_ERROR_NO_RESOURCES;
   }
 
-  /* First, get rid of the leftover string. */
-  int mraa_upm_num_str = 0;
-  char **mraa_upm_str = mraa_tokenize_string(strdesc, MRAA_UPM_SEP, &mraa_upm_num_str);
-  if (mraa_upm_num_str == 0) {
-    syslog(LOG_ERR, "mraa_io_init: Failed to allocate memory for context");
-    free(new_desc);
-    return MRAA_ERROR_INVALID_PARAMETER;
-  }
-
-  p_str = mraa_upm_str[0];
-
-  /* strdesc = "mraa_specific_string - upm_specific_string" */
-  if (mraa_upm_num_str == 2) {
-      new_desc->leftover_str = strdup(mraa_upm_str[1]);
-  } else {
-      new_desc->leftover_str = NULL;
-  }
-
   int num_descs = 0;
-  char **str_descs = mraa_tokenize_string(p_str, DESC_SEP, &num_descs);
+  char **str_descs = mraa_tokenize_string(strdesc, DESC_SEP, &num_descs);
   for (int i = 0; i < num_descs; ++i) {
     int num_desc_tokens = 0;
     char **str_tokens = mraa_tokenize_string(str_descs[i], TOK_SEP, &num_desc_tokens);
 
-    if (strncmp(str_tokens[0], AIO_KEY, strlen(AIO_KEY) ) == 0) {
+    if (strncmp(str_tokens[0], AIO_KEY, strlen(AIO_KEY)) == 0
+        && strlen(str_tokens[0]) == strlen(AIO_KEY)) {
       mraa_aio_context dev = parse_aio(str_tokens, num_desc_tokens);
       if (!dev) {
         syslog(LOG_ERR, "mraa_io_init: error parsing aio");
@@ -592,7 +555,8 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
           new_desc->aios[new_desc->n_aio++] = dev;
         }
       }
-    } else if (strncmp(str_tokens[0], GPIO_KEY, strlen(GPIO_KEY) ) == 0) {
+    } else if (strncmp(str_tokens[0], GPIO_KEY, strlen(GPIO_KEY) ) == 0
+               && strlen(str_tokens[0]) == strlen(GPIO_KEY)) {
       mraa_gpio_context dev = parse_gpio(str_tokens, num_desc_tokens);
       if (!dev) {
         syslog(LOG_ERR, "mraa_io_init: error parsing gpio");
@@ -608,7 +572,8 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
           new_desc->gpios[new_desc->n_gpio++] = dev;
         }
       }
-    } else if (strncmp(str_tokens[0], IIO_KEY, strlen(IIO_KEY) ) == 0) {
+    } else if (strncmp(str_tokens[0], IIO_KEY, strlen(IIO_KEY) ) == 0
+               && strlen(str_tokens[0]) == strlen(IIO_KEY)) {
       mraa_iio_context dev = parse_iio(str_tokens, num_desc_tokens);
       if (!dev) {
         syslog(LOG_ERR, "mraa_io_init: error parsing iio");
@@ -625,7 +590,8 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
           new_desc->iios[new_desc->n_iio++] = dev;
         }
       }
-    } else if (strncmp(str_tokens[0], I2C_KEY, strlen(I2C_KEY) ) == 0) {
+    } else if (strncmp(str_tokens[0], I2C_KEY, strlen(I2C_KEY) ) == 0
+               && strlen(str_tokens[0]) == strlen(I2C_KEY)) {
       mraa_i2c_context dev = parse_i2c(str_tokens, num_desc_tokens);
       if (!dev) {
         syslog(LOG_ERR, "mraa_io_init: error parsing i2c");
@@ -642,7 +608,8 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
           new_desc->i2cs[new_desc->n_i2c++] = dev;
         }
       }
-    } else if (strncmp(str_tokens[0], PWM_KEY, strlen(PWM_KEY) ) == 0) {
+    } else if (strncmp(str_tokens[0], PWM_KEY, strlen(PWM_KEY) ) == 0
+               && strlen(str_tokens[0]) == strlen(PWM_KEY)) {
       mraa_pwm_context dev = parse_pwm(str_tokens, num_desc_tokens);
       if (!dev) {
         syslog(LOG_ERR, "mraa_io_init: error parsing pwm");
@@ -659,7 +626,8 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
           new_desc->pwms[new_desc->n_pwm++] = dev;
         }
       }
-    } else if (strncmp(str_tokens[0], SPI_KEY, strlen(SPI_KEY) ) == 0) {
+    } else if (strncmp(str_tokens[0], SPI_KEY, strlen(SPI_KEY) ) == 0
+               && strlen(str_tokens[0]) == strlen(SPI_KEY)) {
       mraa_spi_context dev = parse_spi(str_tokens, num_desc_tokens);
       if (!dev) {
         syslog(LOG_ERR, "mraa_io_init: error parsing spi");
@@ -676,7 +644,8 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
           new_desc->spis[new_desc->n_spi++] = dev;
         }
       }
-    } else if (strncmp(str_tokens[0], UART_KEY, strlen(UART_KEY) ) == 0) {
+    } else if (strncmp(str_tokens[0], UART_KEY, strlen(UART_KEY) ) == 0
+               && strlen(str_tokens[0]) == strlen(UART_KEY)) {
       mraa_uart_context dev = parse_uart(str_tokens, num_desc_tokens);
       if (!dev) {
         syslog(LOG_ERR, "mraa_io_init: error parsing uart");
@@ -693,7 +662,8 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
           new_desc->uarts[new_desc->n_uart++] = dev;
         }
       }
-    } else if (strncmp(str_tokens[0], UART_OW_KEY, strlen(UART_OW_KEY) ) == 0) {
+    } else if (strncmp(str_tokens[0], UART_OW_KEY, strlen(UART_OW_KEY) ) == 0
+               && strlen(str_tokens[0]) == strlen(UART_OW_KEY)) {
       mraa_uart_ow_context dev = parse_uart_ow(str_tokens, num_desc_tokens);
       if (!dev) {
         syslog(LOG_ERR, "mraa_io_init: error parsing uart_ow");
@@ -710,7 +680,22 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
           new_desc->uart_ows[new_desc->n_uart_ow++] = dev;
         }
       }
-    } else {}
+    } else {
+        // Here we build the leftover string.
+        new_desc->leftover_str = realloc(new_desc->leftover_str,
+                                         sizeof(char) *
+                                         (leftover_str_len + strlen(str_descs[i]) + 2));
+        if (!new_desc->leftover_str) {
+            syslog(LOG_ERR, "mraa_io_init: error allocating memory for leftover string");
+            status = MRAA_ERROR_NO_RESOURCES;
+        } else {
+            //leftover_str_len = strlen();
+            strncat(new_desc->leftover_str, str_descs[i], strlen(str_descs[i]));
+            leftover_str_len += strlen(str_descs[i]) + 1;
+            new_desc->leftover_str[leftover_str_len - 1] = ',';
+            new_desc->leftover_str[leftover_str_len] = '\0';
+        }
+    }
 
     mraa_delete_tokenized_string(str_tokens, num_desc_tokens);
 
@@ -720,7 +705,10 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
   }
   mraa_delete_tokenized_string(str_descs, num_descs);
 
-  mraa_delete_tokenized_string(mraa_upm_str, mraa_upm_num_str);
+  if (new_desc->leftover_str) {
+      // We don't need the last comma.
+      new_desc->leftover_str[leftover_str_len - 1] = '\0';
+  }
 
   if (status == MRAA_SUCCESS) {
     *desc = new_desc;
