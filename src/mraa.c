@@ -29,6 +29,7 @@
 #endif
 
 #include <stddef.h>
+#include <dlfcn.h>
 #include <stdlib.h>
 #include <sched.h>
 #include <string.h>
@@ -195,18 +196,20 @@ imraa_init()
     }
 
 #if defined(USBPLAT)
-    // Now detect sub platform, note this is not an else since we could be in
-    // an error case and fall through to MRAA_ERROR_PLATFORM_NOT_INITIALISED
-    if (plat != NULL) {
-        mraa_platform_t usb_platform_type = mraa_usb_platform_extender(plat);
-        // if we have no known platform just replace usb platform with platform
-        if (plat->platform_type == MRAA_UNKNOWN_PLATFORM && usb_platform_type != MRAA_UNKNOWN_PLATFORM) {
-            plat->platform_type = usb_platform_type;
-        }
-    }
-    if (plat == NULL) {
-        printf("mraa: FATAL error, failed to initialise platform\n");
-        return MRAA_ERROR_PLATFORM_NOT_INITIALISED;
+    syslog(LOG_NOTICE, "Searching for USB plaform extender libraries...");
+    /* If a usb platform lib is present, attempt to load and look for
+     * necessary symbols for adding extended I/O */
+    void* usblib = dlopen("libmraa-platform-ft4222.so", RTLD_LAZY);
+    if (usblib)
+    {
+        syslog(LOG_NOTICE, "Found USB plaform extender library: libmraa-platform-ft4222.so");
+        syslog(LOG_NOTICE, "Attempting to add FT4222 subplatform");
+        mraa_platform_t (*mraa_usb_platform_extender)(mraa_board_t* board) =
+            (mraa_platform_t (*)(mraa_board_t* board))dlsym(usblib, "mraa_usb_platform_extender");
+
+        /* If this method exists, call it to add a subplatform */
+        if(mraa_usb_platform_extender != NULL)
+            mraa_usb_platform_extender(plat);
     }
 #endif
 

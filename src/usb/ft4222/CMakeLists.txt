@@ -1,0 +1,5 @@
+if (FTDI4222)
+    add_library(mraa-platform-ft4222 SHARED ftdi_ft4222.cxx ftdi_ft4222.hpp)
+    target_link_libraries(mraa-platform-ft4222 ft4222)
+    install(TARGETS mraa-platform-ft4222 DESTINATION ${LIB_INSTALL_DIR})
+endif()
