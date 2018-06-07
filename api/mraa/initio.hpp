@@ -103,8 +103,11 @@ class MraaIo
     std::vector<Uart> uarts;
     std::vector<UartOW> uart_ows;
 
-  protected:
+  private:
     /* Used exclusively by the UPM library. */
     std::string leftoverStr;
+
+  public:
+    std::string getLeftoverStr() { return leftoverStr; }
 };
 }

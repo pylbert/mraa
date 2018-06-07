@@ -10,7 +10,6 @@
 
 #define DESC_SEP ","
 #define TOK_SEP ":"
-#define MRAA_UPM_SEP "-"
 
 static mraa_result_t mraa_atoi_x(const char* intStr, char* str_end, int* value, int base)
 {
