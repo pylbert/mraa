@@ -146,6 +146,7 @@ option (ENABLEEXAMPLES "Disable building of examples" ON)
 option (INSTALLTOOLS "Install all tools" ON)
 option (BUILDTESTS "Override the addition of tests" ON)
 option (USEPYTHON3TESTS "Force tests to run with python3" OFF)
+option (CODECOVERAGE "Generate code coverage from unit test suite." OFF)
 
 set (BUILDARCH "" CACHE STRING "Override architecture to build for")
 
@@ -179,6 +180,13 @@ elseif (DETECTED_ARCH STREQUAL "PERIPHERALMAN")
   set (PERIPHERALMAN ON)
 else ()
   message (FATAL_ERROR "Only x86, arm, mips, PERIPHERALMAN and mock platforms currently supported")
+endif()
+
+# Add the corresponding compiler flags for code coverage
+if(CODECOVERAGE AND BUILDTESTS)
+  include(CodeCoverage)
+  append_coverage_compiler_flags()
+  set(COVERAGE_EXCLUDES '/usr/*' '**tests**')
 endif()
 
 if (BUILDSWIGPYTHON OR BUILDTESTS)
@@ -219,4 +227,10 @@ endif ()
 
 if (INSTALLTOOLS)
   add_subdirectory (tools)
+endif()
+
+if(CODECOVERAGE AND BUILDTESTS)
+  setup_target_for_coverage(
+    NAME coverage
+    EXECUTABLE ${CMAKE_CTEST_COMMAND} -j ${PROCESSOR_COUNT})
 endif()
