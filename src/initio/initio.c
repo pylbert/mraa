@@ -1,3 +1,27 @@
+/*
+ * Author: Mihai Stefanescu <mihai.stefanescu@rinftech.com>
+ * Copyright (c) 2018 Intel Corporation.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */ 
+
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -47,6 +71,11 @@ static char** mraa_tokenize_string(const char* str, const char* delims, int *num
 
 static void mraa_delete_tokenized_string(char **str, int num_tokens)
 {
+  if (str == NULL) {
+    syslog(LOG_ERR, "mraa_delete_tokenized_string: NULL string");
+    return;
+  }
+
   for (int i = 0; i < num_tokens; ++i) {
     free(str[i]);
   }
@@ -67,10 +96,10 @@ static mraa_uart_ow_context parse_uart_ow(char **proto, size_t n)
   if (proto[1] && (mraa_atoi_x(proto[1], NULL, &bus, 0) == MRAA_SUCCESS)) {
     dev = mraa_uart_ow_init(bus);
     if (dev == NULL) {
-      syslog(LOG_ERR, "parse_uart_ow: could not init pwm_ow bus %d", bus);
+      syslog(LOG_ERR, "parse_uart_ow: could not init uart_ow bus %d", bus);
     }
   } else {
-    syslog(LOG_ERR, "parse_uart_ow: invalid pwm_ow bus number");
+    syslog(LOG_ERR, "parse_uart_ow: invalid uart_ow bus number");
   }
 
   return dev;
@@ -140,7 +169,7 @@ static mraa_uart_context parse_uart(char **proto, size_t n)
   } else if (strncmp(end, U_PARITY_SPACE, strlen(U_PARITY_SPACE)) == 0) {
     parity = MRAA_UART_PARITY_SPACE;
     end+=strlen(U_PARITY_SPACE);
-  } else {}
+  }
 
   if (parity == -1) {
     syslog(LOG_ERR, "parse_uart: error setting up uart parity");
@@ -198,7 +227,7 @@ static mraa_spi_context parse_spi(char **proto, size_t n)
     mode = MRAA_SPI_MODE2;
   } else if (strncmp(proto[idx], S_MODE_3, strlen(S_MODE_3)) == 0) {
     mode = MRAA_SPI_MODE3;
-  } else {}
+  }
 
   if (mode != -1) {
     if (mraa_spi_mode(dev, (mraa_spi_mode_t)mode) != MRAA_SUCCESS) {
@@ -311,7 +340,7 @@ static mraa_i2c_context parse_i2c(char **proto, size_t n)
     mode = MRAA_I2C_FAST;
   } else if (strncmp(proto[idx], I_MODE_HIGH, strlen(I_MODE_HIGH)) == 0) {
     mode = MRAA_GPIO_PULLDOWN;
-  } else {}
+  }
 
   if (mode != -1) {
     if (mraa_i2c_frequency(dev, (mraa_i2c_mode_t)mode) != MRAA_SUCCESS) {
@@ -399,7 +428,7 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
       dir = MRAA_GPIO_OUT_HIGH;
   } else if (strncmp(proto[idx], G_DIR_OUT_LOW, strlen(G_DIR_OUT_LOW)) == 0) {
       dir = MRAA_GPIO_OUT_LOW;
-  } else {}
+  }
 
   if (dir != -1) {
       if (mraa_gpio_dir(dev, (mraa_gpio_dir_t)dir) != MRAA_SUCCESS) {
@@ -426,7 +455,6 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
       mraa_gpio_close(dev);
       return NULL;
     } else {
-      /* We have a match. */
       if (++idx == n) return dev;
     }
   }
@@ -447,7 +475,7 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
     mode = MRAA_GPIOD_OPEN_DRAIN;
   } else if (strncmp(proto[idx], G_MODE_OPEN_SOURCE, strlen(G_MODE_OPEN_SOURCE)) == 0) {
     mode = MRAA_GPIOD_OPEN_SOURCE;
-  } else {}
+  }
 
   if (mode != -1) {
     if (mraa_gpio_mode(dev, (mraa_gpio_mode_t)mode) != MRAA_SUCCESS) {
@@ -469,7 +497,7 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
     edge = MRAA_GPIO_EDGE_RISING;
   } else if (strncmp(proto[idx], G_EDGE_FALLING, strlen(G_EDGE_FALLING)) == 0) {
     edge = MRAA_GPIO_EDGE_FALLING;
-  } else {}
+  }
 
   if (edge != -1) {
     if (mraa_gpio_dir(dev, (mraa_gpio_edge_t)edge) != MRAA_SUCCESS) {
@@ -487,7 +515,7 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
     input_mode = MRAA_GPIO_ACTIVE_HIGH;
   } else if (strncmp(proto[idx], G_INPUT_ACTIVE_LOW, strlen(G_INPUT_ACTIVE_LOW)) == 0) {
     input_mode = MRAA_GPIO_ACTIVE_LOW;
-  } else {}
+  }
 
   if (input_mode != -1) {
     if (mraa_gpio_input_mode(dev, (mraa_gpio_input_mode_t)input_mode) != MRAA_SUCCESS) {
@@ -505,7 +533,7 @@ static mraa_gpio_context parse_gpio(char **proto, size_t n)
     driver_mode = MRAA_GPIO_OPEN_DRAIN;
   } else if (strncmp(proto[idx], G_OUTPUT_PUSH_PULL, strlen(G_OUTPUT_PUSH_PULL)) == 0) {
     driver_mode = MRAA_GPIO_PUSH_PULL;
-  } else {}
+  }
 
   if (driver_mode != -1) {
     if (mraa_gpio_input_mode(dev, (mraa_gpio_out_driver_mode_t)driver_mode) != MRAA_SUCCESS) {
@@ -522,7 +550,6 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
 {
   mraa_result_t status = MRAA_SUCCESS;
   size_t leftover_str_len = 0;
-  /* Allocate space for the descriptor */
   mraa_io_descriptor *new_desc = calloc(1, sizeof(mraa_io_descriptor));
   if (new_desc == NULL) {
     syslog(LOG_ERR, "mraa_io_init: Failed to allocate memory for context");
@@ -544,7 +571,6 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
         status = MRAA_ERROR_INVALID_HANDLE;
       }
 
-      // Allocate space for the new AIO context
       if (status == MRAA_SUCCESS) {
         new_desc->aios = realloc(new_desc->aios, sizeof(mraa_aio_context) * (new_desc->n_aio + 1));
         if (!new_desc->aios) {
@@ -561,7 +587,7 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
         syslog(LOG_ERR, "mraa_io_init: error parsing gpio");
         status = MRAA_ERROR_INVALID_HANDLE;
       }
-      /* Allocate space for the new GPIO context */
+
       if (status == MRAA_SUCCESS) {
         new_desc->gpios = realloc(new_desc->gpios, sizeof(mraa_gpio_context) * (new_desc->n_gpio + 1));
         if (!new_desc->gpios) {
@@ -579,7 +605,6 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
         status = MRAA_ERROR_INVALID_HANDLE;
       }
 
-      // Allocate space for the new AIO context
       if (status == MRAA_SUCCESS) {
         new_desc->iios = realloc(new_desc->iios, sizeof(mraa_iio_context) * (new_desc->n_iio + 1));
         if (!new_desc->iios) {
@@ -597,7 +622,6 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
         status = MRAA_ERROR_INVALID_HANDLE;
       }
 
-      // Allocate space for the new AIO context
       if (status == MRAA_SUCCESS) {
         new_desc->i2cs = realloc(new_desc->i2cs, sizeof(mraa_i2c_context) * (new_desc->n_i2c + 1));
         if (!new_desc->i2cs) {
@@ -615,7 +639,6 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
         status = MRAA_ERROR_INVALID_HANDLE;
       }
 
-      // Allocate space for the new AIO context
       if (status == MRAA_SUCCESS) {
         new_desc->pwms = realloc(new_desc->pwms, sizeof(mraa_pwm_context) * (new_desc->n_pwm + 1));
         if (!new_desc->pwms) {
@@ -633,7 +656,6 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
         status = MRAA_ERROR_INVALID_HANDLE;
       }
 
-      // Allocate space for the new AIO context
       if (status == MRAA_SUCCESS) {
         new_desc->spis = realloc(new_desc->spis, sizeof(mraa_spi_context) * (new_desc->n_spi + 1));
         if (!new_desc->spis) {
@@ -651,7 +673,6 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
         status = MRAA_ERROR_INVALID_HANDLE;
       }
 
-      // Allocate space for the new AIO context
       if (status == MRAA_SUCCESS) {
         new_desc->uarts = realloc(new_desc->uarts, sizeof(mraa_uart_context) * (new_desc->n_uart + 1));
         if (!new_desc->uarts) {
@@ -669,7 +690,6 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
         status = MRAA_ERROR_INVALID_HANDLE;
       }
 
-      // Allocate space for the new AIO context
       if (status == MRAA_SUCCESS) {
         new_desc->uart_ows = realloc(new_desc->uart_ows, sizeof(mraa_uart_ow_context) * (new_desc->n_uart_ow + 1));
         if (!new_desc->uart_ows) {
@@ -688,7 +708,6 @@ mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc)
             syslog(LOG_ERR, "mraa_io_init: error allocating memory for leftover string");
             status = MRAA_ERROR_NO_RESOURCES;
         } else {
-            //leftover_str_len = strlen();
             strncat(new_desc->leftover_str, str_descs[i], strlen(str_descs[i]));
             leftover_str_len += strlen(str_descs[i]) + 1;
             new_desc->leftover_str[leftover_str_len - 1] = ',';
@@ -723,49 +742,41 @@ mraa_result_t mraa_io_close(mraa_io_descriptor* desc)
     return MRAA_ERROR_INVALID_PARAMETER;
   }
 
-  // aio
   for (int i = 0; i < desc->n_aio; ++i) {
     mraa_aio_close(desc->aios[i]);
   }
   if (desc->n_aio) free(desc->aios);
 
-  // gpio
   for (int i = 0; i < desc->n_gpio; ++i) {
     mraa_gpio_close(desc->gpios[i]);
   }
   if (desc->n_gpio) free(desc->gpios);
 
-  // i2c
   for (int i = 0; i < desc->n_i2c; ++i) {
     mraa_i2c_stop(desc->i2cs[i]);
   }
   if (desc->n_i2c) free(desc->i2cs);
 
-  // iio
   for (int i = 0; i < desc->n_iio; ++i) {
     mraa_iio_close(desc->iios[i]);
   }
   if (desc->n_iio) free(desc->iios);
 
-  // pwm
   for (int i = 0; i < desc->n_pwm; ++i) {
     mraa_pwm_close(desc->pwms[i]);
   }
   if (desc->n_pwm) free(desc->pwms);
 
-  // spi
   for (int i = 0; i < desc->n_spi; ++i) {
     mraa_spi_stop(desc->spis[i]);
   }
   if (desc->n_spi) free(desc->spis);
 
-  // uart
   for (int i = 0; i < desc->n_uart; ++i) {
     mraa_uart_stop(desc->uarts[i]);
   }
   if (desc->n_uart) free(desc->uarts);
 
-  // uart_ow
   for (int i = 0; i < desc->n_uart_ow; ++i) {
     mraa_uart_ow_stop(desc->uart_ows[i]);
   }
@@ -774,7 +785,6 @@ mraa_result_t mraa_io_close(mraa_io_descriptor* desc)
   if (desc->leftover_str)
     free(desc->leftover_str);
 
-  /* Finally free the mraa_io_descriptor structure. */
   free(desc);
 
   return MRAA_SUCCESS;
