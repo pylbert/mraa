@@ -47,24 +47,24 @@ extern "C" {
 #include "uart_ow.h"
 
 typedef struct _mraa_io_descriptor {
-  int n_aio;
-  mraa_aio_context *aios;
-  int n_gpio;
-  mraa_gpio_context *gpios;
-  int n_i2c;
-  mraa_i2c_context *i2cs;
-  int n_iio;
-  mraa_iio_context *iios;
-  int n_pwm;
-  mraa_pwm_context *pwms;
-  int n_spi;
-  mraa_spi_context *spis;
-  int n_uart;
-  mraa_uart_context *uarts;
-  int n_uart_ow;
-  mraa_uart_ow_context *uart_ows;
+    int n_aio;
+    mraa_aio_context* aios;
+    int n_gpio;
+    mraa_gpio_context* gpios;
+    int n_i2c;
+    mraa_i2c_context* i2cs;
+    int n_iio;
+    mraa_iio_context* iios;
+    int n_pwm;
+    mraa_pwm_context* pwms;
+    int n_spi;
+    mraa_spi_context* spis;
+    int n_uart;
+    mraa_uart_context* uarts;
+    int n_uart_ow;
+    mraa_uart_ow_context* uart_ows;
 
-  char* leftover_str;
+    char* leftover_str;
 } mraa_io_descriptor;
 
 /**
@@ -134,7 +134,7 @@ typedef struct _mraa_io_descriptor {
   * @param desc Pointer to structure containing number/pointer collections for initialized IO.
   * @return Result of operation
   */
-mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor **desc);
+mraa_result_t mraa_io_init(const char* strdesc, mraa_io_descriptor** desc);
 
 /**
   * Free and close resources used by mraa_io_descriptor structure.

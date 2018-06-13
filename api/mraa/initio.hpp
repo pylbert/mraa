@@ -25,8 +25,8 @@
 #pragma once
 
 #include "initio.h"
-#include <string>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include "aio.hpp"
@@ -43,78 +43,78 @@ namespace mraa
 class MraaIo
 {
   private:
-      mraa_io_descriptor *descs;
+    mraa_io_descriptor* descs;
 
   public:
     MraaIo(std::string initStr)
     {
-      if (mraa_io_init(initStr.c_str(), &descs) != MRAA_SUCCESS) {
-        throw std::runtime_error("mraa_io_init error");
-      }
+        if (mraa_io_init(initStr.c_str(), &descs) != MRAA_SUCCESS) {
+            throw std::runtime_error("mraa_io_init error");
+        }
 
-      for (int i = 0; i < descs->n_aio; ++i) {
-        aios.emplace_back(descs->aios[i]);
-      }
+        for (int i = 0; i < descs->n_aio; ++i) {
+            aios.emplace_back(descs->aios[i]);
+        }
 
-      for (int i = 0; i < descs->n_gpio; ++i) {
-        gpios.emplace_back(descs->gpios[i]);
-      }
+        for (int i = 0; i < descs->n_gpio; ++i) {
+            gpios.emplace_back(descs->gpios[i]);
+        }
 
-      for (int i = 0; i < descs->n_i2c; ++i) {
-        i2cs.emplace_back(descs->i2cs[i]);
-      }
+        for (int i = 0; i < descs->n_i2c; ++i) {
+            i2cs.emplace_back(descs->i2cs[i]);
+        }
 
-      for (int i = 0; i < descs->n_iio; ++i) {
-        iios.emplace_back(descs->iios[i]);
-      }
+        for (int i = 0; i < descs->n_iio; ++i) {
+            iios.emplace_back(descs->iios[i]);
+        }
 
-      for (int i = 0; i < descs->n_pwm; ++i) {
-        pwms.emplace_back(descs->pwms[i]);
-      }
+        for (int i = 0; i < descs->n_pwm; ++i) {
+            pwms.emplace_back(descs->pwms[i]);
+        }
 
-      for (int i = 0; i < descs->n_spi; ++i) {
-        spis.emplace_back(descs->spis[i]);
-      }
+        for (int i = 0; i < descs->n_spi; ++i) {
+            spis.emplace_back(descs->spis[i]);
+        }
 
-      for (int i = 0; i < descs->n_uart; ++i) {
-        uarts.emplace_back(descs->uarts[i]);
-      }
+        for (int i = 0; i < descs->n_uart; ++i) {
+            uarts.emplace_back(descs->uarts[i]);
+        }
 
-      for (int i = 0; i < descs->n_uart_ow; ++i) {
-        uart_ows.emplace_back(descs->uart_ows[i]);
-      }
+        for (int i = 0; i < descs->n_uart_ow; ++i) {
+            uart_ows.emplace_back(descs->uart_ows[i]);
+        }
 
-      if (descs->leftover_str) {
-        leftoverStr = std::string(descs->leftover_str);
-      } else {
-        leftoverStr = std::string("");
-      }
+        if (descs->leftover_str) {
+            leftoverStr = std::string(descs->leftover_str);
+        } else {
+            leftoverStr = std::string("");
+        }
     }
 
     ~MraaIo()
     {
-      if (descs->leftover_str)
-        free(descs->leftover_str);
+        if (descs->leftover_str)
+            free(descs->leftover_str);
 
-      if (descs->n_aio)
-        free(descs->aios);
-      if (descs->n_gpio)
-        free(descs->gpios);
-      if (descs->n_i2c)
-        free(descs->i2cs);
-      if (descs->n_iio)
-        free(descs->iios);
-      if (descs->n_pwm)
-        free(descs->pwms);
-      if (descs->n_spi)
-        free(descs->spis);
-      if (descs->n_uart)
-        free(descs->uarts);
-      if (descs->n_uart_ow)
-        free(descs->uart_ows);
+        if (descs->n_aio)
+            free(descs->aios);
+        if (descs->n_gpio)
+            free(descs->gpios);
+        if (descs->n_i2c)
+            free(descs->i2cs);
+        if (descs->n_iio)
+            free(descs->iios);
+        if (descs->n_pwm)
+            free(descs->pwms);
+        if (descs->n_spi)
+            free(descs->spis);
+        if (descs->n_uart)
+            free(descs->uarts);
+        if (descs->n_uart_ow)
+            free(descs->uart_ows);
 
-      /* Finally free the mraa_io_descriptor structure. */
-      free(descs);
+        /* Finally free the mraa_io_descriptor structure. */
+        free(descs);
     }
 
   public:
@@ -133,8 +133,16 @@ class MraaIo
 
   public:
     /* This is used mainly by sensors that use C structs/functions in C++ code.*/
-    mraa_io_descriptor* getMraaDescriptors () { return descs; }
+    mraa_io_descriptor*
+    getMraaDescriptors()
+    {
+        return descs;
+    }
 
-    std::string getLeftoverStr() { return leftoverStr; }
+    std::string
+    getLeftoverStr()
+    {
+        return leftoverStr;
+    }
 };
 }

@@ -24,10 +24,10 @@
 
 #pragma once
 
-#include "uart_ow.h"
 #include "types.hpp"
-#include <stdexcept>
+#include "uart_ow.h"
 #include <cstring>
+#include <stdexcept>
 
 namespace mraa
 {
@@ -82,11 +82,11 @@ class UartOW
      */
     UartOW(void* uart_ow_context)
     {
-      m_uart = (mraa_uart_ow_context) uart_ow_context;
+        m_uart = (mraa_uart_ow_context) uart_ow_context;
 
-      if (m_uart == NULL) {
-        throw std::invalid_argument("Invalid UART_OW context");
-      }
+        if (m_uart == NULL) {
+            throw std::invalid_argument("Invalid UART_OW context");
+        }
     }
 
     /**
