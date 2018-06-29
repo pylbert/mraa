@@ -533,7 +533,7 @@ parse_gpio(char** proto, size_t n)
     }
 
     if (edge != -1) {
-        if (mraa_gpio_dir(dev, (mraa_gpio_edge_t) edge) != MRAA_SUCCESS) {
+      if (mraa_gpio_edge_mode(dev, (mraa_gpio_edge_t) edge) != MRAA_SUCCESS) {
             syslog(LOG_ERR, "parse_gpio: error setting up gpio edge %s", proto[idx]);
             mraa_gpio_close(dev);
             return NULL;
@@ -573,7 +573,7 @@ parse_gpio(char** proto, size_t n)
     }
 
     if (driver_mode != -1) {
-        if (mraa_gpio_input_mode(dev, (mraa_gpio_out_driver_mode_t) driver_mode) != MRAA_SUCCESS) {
+      if (mraa_gpio_out_driver_mode(dev, (mraa_gpio_out_driver_mode_t) driver_mode) != MRAA_SUCCESS) {
             syslog(LOG_ERR, "parse_gpio: error setting up gpio driver mode %s", proto[idx]);
             mraa_gpio_close(dev);
             return NULL;
@@ -747,6 +747,12 @@ mraa_io_init(const char* strdesc, mraa_io_descriptor** desc)
                 syslog(LOG_ERR, "mraa_io_init: error allocating memory for leftover string");
                 status = MRAA_ERROR_NO_RESOURCES;
             } else {
+                if (leftover_str_len == 0) {
+                  strncpy(new_desc->leftover_str, str_descs[i], strlen(str_descs[i]));
+                } else {
+                  strncat(new_desc->leftover_str, str_descs[i], strlen(str_descs[i]));
+                }
+
                 strncat(new_desc->leftover_str, str_descs[i], strlen(str_descs[i]));
                 leftover_str_len += strlen(str_descs[i]) + 1;
                 new_desc->leftover_str[leftover_str_len - 1] = ',';
