@@ -99,6 +99,8 @@ class MraaIo
         }
     }
 
+    MraaIo() {}
+
     ~MraaIo()
     {
         if (descs->leftover_str)
