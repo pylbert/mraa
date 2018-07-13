@@ -114,14 +114,14 @@ typedef struct _mraa_io_descriptor {
   *
   *          examples:
   *              s:1                 # spi bus 1
-  *              s:0x1,mode2,400000  # spi bus 1, mode2 (CPOL = 1, CPHA = 0), 400 KHz
+  *              s:0x1:mode2:400000  # spi bus 1, mode2 (CPOL = 1, CPHA = 0), 400 KHz
   *
   *      UART
   *          UART_KEY:uart ndx[:baud:mode]
   *
   *          examples:
   *              u:1                 # uart bus 1
-  *              u:0x1,9600:8N1      # uart bus 1, 9600 baud, 8 bit byte, no parity, 1 stop bit
+  *              u:0x1:9600:8N1      # uart bus 1, 9600 baud, 8 bit byte, no parity, 1 stop bit
   *
   *      UART_OW
   *          UART_OW_KEY:uart_ow ndx
