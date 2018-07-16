@@ -342,7 +342,7 @@ parse_i2c(char** proto, size_t n)
     }
 
     int address = -1;
-    if (proto[idx] && (mraa_atoi_x(proto[idx], NULL, &address, 0) != MRAA_SUCCESS)) {
+    if (proto[idx] && (mraa_atoi_x(proto[idx], NULL, &address, 0) == MRAA_SUCCESS)) {
         if (mraa_i2c_address(dev, (uint8_t) address) != MRAA_SUCCESS) {
             syslog(LOG_ERR, "parse_i2c: error setting up i2c address");
             mraa_i2c_stop(dev);
@@ -403,7 +403,7 @@ parse_aio(char** proto, size_t n)
     }
 
     int num_bits = -1;
-    if (proto[idx] && (mraa_atoi_x(proto[idx], NULL, &num_bits, 0) != MRAA_SUCCESS)) {
+    if (proto[idx] && (mraa_atoi_x(proto[idx], NULL, &num_bits, 0) == MRAA_SUCCESS)) {
         if (mraa_aio_set_bit(dev, num_bits) != MRAA_SUCCESS) {
             syslog(LOG_ERR, "parse_aio: error setting up aio bit");
             mraa_aio_close(dev);

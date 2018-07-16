@@ -46,7 +46,7 @@ class MraaIo
     mraa_io_descriptor* descs;
 
   public:
-    MraaIo(std::string initStr)
+    MraaIo(const std::string& initStr) : descs()
     {
         if (mraa_io_init(initStr.c_str(), &descs) != MRAA_SUCCESS) {
             throw std::runtime_error("mraa_io_init error");
@@ -99,7 +99,7 @@ class MraaIo
         }
     }
 
-    MraaIo() {}
+    MraaIo() : descs() {}
 
     ~MraaIo()
     {
