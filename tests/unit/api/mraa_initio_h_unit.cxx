@@ -43,17 +43,23 @@ class mraa_initio_h_unit : public ::testing::Test
     virtual void TearDown() {}
 };
 
-/* Test for a successful AIO init. */
-TEST_F(mraa_initio_h_unit, test_aio_init)
+/* Test for a failing AIO init. */
+TEST_F(mraa_initio_h_unit, test_aio_init_failing)
 {
     mraa_io_descriptor* desc;
-    mraa_result_t status;
 
-    status = mraa_io_init("a:0:10", &desc);
-    ASSERT_EQ(status, MRAA_SUCCESS);
+    /* Failing case - fail converting bogus */
+    ASSERT_EQ(MRAA_ERROR_INVALID_HANDLE, mraa_io_init("a:bogus:10", &desc));
+}
 
-    status = mraa_io_close(desc);
-    ASSERT_EQ(status, MRAA_SUCCESS);
+/* Test for a successful AIO init. */
+TEST_F(mraa_initio_h_unit, test_aio_init_passing)
+{
+    mraa_io_descriptor* desc;
+
+    /* Failing case - fail converting bogus */
+    ASSERT_EQ(MRAA_SUCCESS, mraa_io_init("a:0:10", &desc));
+    ASSERT_EQ(MRAA_SUCCESS, mraa_io_close(desc));
 }
 
 /* Test for a successful GPIO init. */
