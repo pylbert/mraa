@@ -40,6 +40,12 @@ if (DETECTED_ARCH STREQUAL "MOCK")
     target_include_directories(test_unit_ioinit_h PRIVATE "${CMAKE_SOURCE_DIR}/api")
     gtest_add_tests(test_unit_ioinit_h "" AUTO)
     list(APPEND GTEST_UNIT_TEST_TARGETS test_unit_ioinit_h)
+
+    add_executable(test_unit_ioinit_hpp api/mraa_initio_hpp_unit.cxx)
+    target_link_libraries(test_unit_ioinit_hpp GTest::GTest GTest::Main mraa)
+    target_include_directories(test_unit_ioinit_hpp PRIVATE "${CMAKE_SOURCE_DIR}/api")
+    gtest_add_tests(test_unit_ioinit_hpp "" AUTO)
+    list(APPEND GTEST_UNIT_TEST_TARGETS test_unit_ioinit_hpp)
 endif()
 
 # Add a target for all unit tests

@@ -58,44 +58,44 @@ class MraaIo
 
         aios.reserve(descs->n_aio);
         for (int i = 0; i < descs->n_aio; ++i) {
-            aios.emplace_back(descs->aios[i]);
+            aios.push_back(descs->aios[i]);
         }
 
         gpios.reserve(descs->n_gpio);
         for (int i = 0; i < descs->n_gpio; ++i) {
-            gpios.emplace_back(descs->gpios[i]);
+            gpios.push_back(descs->gpios[i]);
         }
 
         i2cs.reserve(descs->n_i2c);
         for (int i = 0; i < descs->n_i2c; ++i) {
-            i2cs.emplace_back(descs->i2cs[i]);
+            i2cs.push_back(descs->i2cs[i]);
         }
 
 #if !defined(PERIPHERALMAN)
         iios.reserve(descs->n_iio);
         for (int i = 0; i < descs->n_iio; ++i) {
-            iios.emplace_back(descs->iios[i]);
+            iios.push_back(descs->iios[i]);
         }
 #endif
 
         pwms.reserve(descs->n_pwm);
         for (int i = 0; i < descs->n_pwm; ++i) {
-            pwms.emplace_back(descs->pwms[i]);
+            pwms.push_back(descs->pwms[i]);
         }
 
         spis.reserve(descs->n_spi);
         for (int i = 0; i < descs->n_spi; ++i) {
-            spis.emplace_back(descs->spis[i]);
+            spis.push_back(descs->spis[i]);
         }
 
         uarts.reserve(descs->n_uart);
         for (int i = 0; i < descs->n_uart; ++i) {
-            uarts.emplace_back(descs->uarts[i]);
+            uarts.push_back(descs->uarts[i]);
         }
 
         uart_ows.reserve(descs->n_uart_ow);
         for (int i = 0; i < descs->n_uart_ow; ++i) {
-            uart_ows.emplace_back(descs->uart_ows[i]);
+            uart_ows.push_back(descs->uart_ows[i]);
         }
 
         if (descs->leftover_str) {

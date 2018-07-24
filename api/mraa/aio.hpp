@@ -24,9 +24,10 @@
 
 #pragma once
 
-#include <stdexcept>
 #include "aio.h"
 #include "types.hpp"
+#include <map>
+#include <stdexcept>
 
 namespace mraa
 {
@@ -53,6 +54,7 @@ class Aio
         if (m_aio == NULL) {
             throw std::invalid_argument("Invalid AIO pin specified - do you have an ADC?");
         }
+        m_map()[m_aio]++;
     }
     /**
      * Aio Constructor, takes a pointer to the AIO context and initialises
@@ -68,14 +70,49 @@ class Aio
         if (m_aio == NULL) {
             throw std::invalid_argument("Invalid AIO context");
         }
+        m_map()[static_cast<mraa_aio_context>(aio_context)]++;
     }
+
+    /**
+     * Handle Aio copy
+     * Create a new Aio copy from src
+     * @param src Target Aio instance to copy
+     */
+    Aio(const Aio& src)
+    {
+        m_aio = src.m_aio;
+        m_map()[m_aio]++;
+    }
+
+    /**
+     * Handle Aio assignment.
+     * Multiple Aio class instances can reference the same aio context.
+     * @param src Target Aio instance to copy
+     * @return New Aio instance which references the same resources from src
+     */
+    Aio&
+    operator=(const Aio& src)
+    {
+        this->m_aio = src.m_aio;
+        m_map()[m_aio]++;
+        return *this;
+    }
+
     /**
      * Aio destructor
      */
-    ~Aio()
+    virtual ~Aio()
     {
-        mraa_aio_close(m_aio);
+        /* If this is the last Aio object which references the
+         * mraa_aio_context, then remove the context from the map and
+         * free up the aio resources
+         */
+        if (m_map()[m_aio]-- == 1) {
+            m_map().erase(m_aio);
+            mraa_aio_close(m_aio);
+        }
     }
+
     /**
      * Read a value from the AIO pin. By default mraa will shift
      * the raw value up or down to a 10 bit value.
@@ -87,7 +124,7 @@ class Aio
     read()
     {
         int x = mraa_aio_read(m_aio);
-	if (x == -1) {
+        if (x == -1) {
             throw std::invalid_argument("Unknown error in Aio::read()");
         }
         return (unsigned int) x;
@@ -102,7 +139,7 @@ class Aio
     readFloat()
     {
         float x = mraa_aio_read_float(m_aio);
-	if (x == -1.0f) {
+        if (x == -1.0f) {
             throw std::invalid_argument("Unknown error in Aio::readFloat()");
         }
         return x;
@@ -131,5 +168,13 @@ class Aio
 
   private:
     mraa_aio_context m_aio;
+
+    /* Keep track of instances per mraa_aio_context */
+    static std::map<mraa_aio_context, int>&
+    m_map()
+    {
+        static std::map<mraa_aio_context, int> _map;
+        return _map;
+    }
 };
 }
